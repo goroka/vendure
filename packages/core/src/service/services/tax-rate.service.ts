@@ -10,10 +10,10 @@ import { ID, PaginatedList } from '@vendure/common/lib/shared-types';
 import { RequestContext } from '../../api/common/request-context';
 import { RelationPaths } from '../../api/decorators/relations.decorator';
 import { EntityNotFoundError } from '../../common/error/errors';
-import { createSelfRefreshingCache, SelfRefreshingCache } from '../../common/self-refreshing-cache';
 import { ListQueryOptions } from '../../common/types/common-types';
 import { assertFound } from '../../common/utils';
 import { ConfigService } from '../../config/config.service';
+import { EntityCache } from '../../config/entity-cache-strategy/entity-cache-strategy';
 import { TransactionalConnection } from '../../connection/transactional-connection';
 import { CustomerGroup } from '../../entity/customer-group/customer-group.entity';
 import { TaxCategory } from '../../entity/tax-category/tax-category.entity';
@@ -39,7 +39,7 @@ export class TaxRateService {
         name: 'No configured tax rate',
         id: '0',
     });
-    private activeTaxRates: SelfRefreshingCache<TaxRate[], [RequestContext]>;
+    private activeTaxRates: EntityCache<TaxRate[], [RequestContext]>;
 
     constructor(
         private connection: TransactionalConnection,
@@ -190,10 +190,12 @@ export class TaxRateService {
             return;
         }
 
-        this.activeTaxRates = await createSelfRefreshingCache({
-            name: 'TaxRateService.activeTaxRates',
-            ttl: this.configService.entityOptions.taxRateCacheTtl,
-            refresh: { fn: ctx => this.findActiveTaxRates(ctx), defaultArgs: [RequestContext.empty()] },
-        });
+        this.activeTaxRates = await this.configService.entityOptions.entityCacheStrategy.createCache(
+            this.configService,
+            {
+                name: 'TaxRateService.activeTaxRates',
+                refresh: { fn: ctx => this.findActiveTaxRates(ctx), defaultArgs: [RequestContext.empty()] },
+            },
+        );
     }
 }

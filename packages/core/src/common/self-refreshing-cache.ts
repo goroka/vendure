@@ -1,12 +1,13 @@
 import { Json } from '@vendure/common/lib/shared-types';
 
+import { EntityCache, EntityCacheConfig } from '../config/entity-cache-strategy/entity-cache-strategy';
 import { Logger } from '../config/logger/vendure-logger';
 
 /**
  * @description
  * A cache which automatically refreshes itself if the value is found to be stale.
  */
-export interface SelfRefreshingCache<V, RefreshArgs extends any[] = []> {
+export interface SelfRefreshingCache<V, RefreshArgs extends any[] = []> extends EntityCache<V, RefreshArgs> {
     /**
      * @description
      * The current value of the cache. If the value is stale, the data will be refreshed and then
@@ -35,21 +36,9 @@ export interface SelfRefreshingCache<V, RefreshArgs extends any[] = []> {
     refresh(...args: RefreshArgs): Promise<V>;
 }
 
-export interface SelfRefreshingCacheConfig<V, RefreshArgs extends any[]> {
-    name: string;
+export interface SelfRefreshingCacheConfig<V, RefreshArgs extends any[]>
+    extends EntityCacheConfig<V, RefreshArgs> {
     ttl: number;
-    refresh: {
-        fn: (...args: RefreshArgs) => Promise<V>;
-        /**
-         * Default arguments, passed to refresh function
-         */
-        defaultArgs: RefreshArgs;
-    };
-    /**
-     * Intended for unit testing the SelfRefreshingCache only.
-     * By default uses `() => new Date().getTime()`
-     */
-    getTimeFn?: () => number;
 }
 
 /**

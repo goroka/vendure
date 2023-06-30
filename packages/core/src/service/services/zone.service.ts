@@ -13,9 +13,9 @@ import { In } from 'typeorm';
 
 import { RequestContext } from '../../api/common/request-context';
 import { ListQueryOptions } from '../../common/index';
-import { createSelfRefreshingCache, SelfRefreshingCache } from '../../common/self-refreshing-cache';
 import { assertFound } from '../../common/utils';
 import { ConfigService } from '../../config/config.service';
+import { EntityCache } from '../../config/entity-cache-strategy/entity-cache-strategy';
 import { TransactionalConnection } from '../../connection/transactional-connection';
 import { Channel, TaxRate } from '../../entity';
 import { Country } from '../../entity/region/country.entity';
@@ -38,7 +38,7 @@ export class ZoneService {
     /**
      * We cache all Zones to avoid hitting the DB many times per request.
      */
-    private zones: SelfRefreshingCache<Zone[], [RequestContext]>;
+    private zones: EntityCache<Zone[], [RequestContext]>;
     constructor(
         private connection: TransactionalConnection,
         private configService: ConfigService,
@@ -57,10 +57,9 @@ export class ZoneService {
      *
      * @internal
      */
-    async createCache(): Promise<SelfRefreshingCache<Zone[], [RequestContext]>> {
-        return await createSelfRefreshingCache({
+    async createCache(): Promise<EntityCache<Zone[], [RequestContext]>> {
+        return await this.configService.entityOptions.entityCacheStrategy.createCache(this.configService, {
             name: 'ZoneService.zones',
-            ttl: this.configService.entityOptions.zoneCacheTtl,
             refresh: {
                 fn: ctx =>
                     this.connection.getRepository(ctx, Zone).find({

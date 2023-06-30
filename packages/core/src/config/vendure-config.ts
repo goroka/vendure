@@ -24,6 +24,7 @@ import { StockLocationStrategy } from './catalog/stock-location-strategy';
 import { CustomFields } from './custom-field/custom-field-types';
 import { EntityIdStrategy } from './entity/entity-id-strategy';
 import { MoneyStrategy } from './entity/money-strategy';
+import { EntityCacheStrategy } from './entity-cache-strategy/entity-cache-strategy';
 import { EntityMetadataModifier } from './entity-metadata/entity-metadata-modifier';
 import { FulfillmentHandler } from './fulfillment/fulfillment-handler';
 import { FulfillmentProcess } from './fulfillment/fulfillment-process';
@@ -911,6 +912,7 @@ export interface JobQueueOptions {
  * @docsWeight 0
  */
 export interface EntityOptions {
+    entityCacheStrategy?: EntityCacheStrategy;
     /**
      * @description
      * Defines the strategy used for both storing the primary keys of entities

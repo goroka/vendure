@@ -23,10 +23,10 @@ import {
     UserInputError,
 } from '../../common/error/errors';
 import { LanguageNotAvailableError } from '../../common/error/generated-graphql-admin-errors';
-import { createSelfRefreshingCache, SelfRefreshingCache } from '../../common/self-refreshing-cache';
 import { ChannelAware, ListQueryOptions } from '../../common/types/common-types';
 import { assertFound, idsAreEqual } from '../../common/utils';
 import { ConfigService } from '../../config/config.service';
+import { EntityCache, EntityCacheStrategy } from '../../config/entity-cache-strategy/entity-cache-strategy';
 import { TransactionalConnection } from '../../connection/transactional-connection';
 import { VendureEntity } from '../../entity/base/base.entity';
 import { Channel } from '../../entity/channel/channel.entity';
@@ -52,7 +52,8 @@ import { GlobalSettingsService } from './global-settings.service';
  */
 @Injectable()
 export class ChannelService {
-    private allChannels: SelfRefreshingCache<Channel[], [RequestContext]>;
+    private allChannels: EntityCache<Channel[], [RequestContext]>;
+    private entityCacheStrategy: EntityCacheStrategy;
 
     constructor(
         private connection: TransactionalConnection,
@@ -61,7 +62,9 @@ export class ChannelService {
         private customFieldRelationService: CustomFieldRelationService,
         private eventBus: EventBus,
         private listQueryBuilder: ListQueryBuilder,
-    ) {}
+    ) {
+        this.entityCacheStrategy = this.configService.entityOptions.entityCacheStrategy;
+    }
 
     /**
      * When the app is bootstrapped, ensure a default Channel exists and populate the
@@ -79,10 +82,9 @@ export class ChannelService {
      *
      * @internal
      */
-    async createCache(): Promise<SelfRefreshingCache<Channel[], [RequestContext]>> {
-        return createSelfRefreshingCache({
+    async createCache(): Promise<EntityCache<Channel[], [RequestContext]>> {
+        return this.entityCacheStrategy.createCache(this.configService, {
             name: 'ChannelService.allChannels',
-            ttl: this.configService.entityOptions.channelCacheTtl,
             refresh: {
                 fn: async ctx => {
                     const result = await this.listQueryBuilder

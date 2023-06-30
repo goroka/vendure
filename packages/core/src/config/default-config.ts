@@ -23,6 +23,7 @@ import { DefaultStockDisplayStrategy } from './catalog/default-stock-display-str
 import { DefaultStockLocationStrategy } from './catalog/default-stock-location-strategy';
 import { AutoIncrementIdStrategy } from './entity/auto-increment-id-strategy';
 import { DefaultMoneyStrategy } from './entity/default-money-strategy';
+import { EntityCacheSelfRefreshingStrategy } from './entity-cache-strategy/entity-cache-self-refreshing-strategy';
 import { defaultFulfillmentProcess } from './fulfillment/default-fulfillment-process';
 import { manualFulfillmentHandler } from './fulfillment/manual-fulfillment-handler';
 import { DefaultLogger } from './logger/default-logger';
@@ -128,6 +129,7 @@ export const defaultConfig: RuntimeVendureConfig = {
         zoneCacheTtl: 30000,
         taxRateCacheTtl: 30000,
         metadataModifiers: [],
+        entityCacheStrategy: new EntityCacheSelfRefreshingStrategy(),
     },
     promotionOptions: {
         promotionConditions: defaultPromotionConditions,
